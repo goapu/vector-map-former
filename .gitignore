@@ -24,3 +24,7 @@ checkpoints/
 *.pt
 *.pth
 *.ckpt
+
+# Local-only preparation material and pre-restructure artifacts
+/local-notes/
+/vector-map-former/

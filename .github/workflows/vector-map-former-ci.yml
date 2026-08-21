@@ -2,13 +2,12 @@ name: VectorMapFormer CI
 
 on:
   push:
-    paths:
-      - "vector-map-former/**"
-      - ".github/workflows/vector-map-former-ci.yml"
+    branches: [main]
   pull_request:
-    paths:
-      - "vector-map-former/**"
-      - ".github/workflows/vector-map-former-ci.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 permissions:
   contents: read
@@ -16,20 +15,20 @@ permissions:
 jobs:
   quality:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: vector-map-former
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: vector-map-former/pyproject.toml
+          cache-dependency-path: pyproject.toml
       - name: Install package and quality tools
         run: python -m pip install --upgrade pip && python -m pip install -e '.[geometry,dev]'
       - name: Lint
         run: python -m ruff check src tests
+      - name: Check formatting
+        run: python -m ruff format --check src tests
       - name: Type-check
         run: python -m mypy src/vector_map_former
       - name: Test

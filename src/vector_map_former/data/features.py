@@ -59,10 +59,9 @@ def structural_features(coordinates: np.ndarray) -> np.ndarray:
     incoming_unit = incoming / safe_incoming
     outgoing_unit = outgoing / safe_outgoing
     cosine = np.clip((incoming_unit * outgoing_unit).sum(axis=1, keepdims=True), -1.0, 1.0)
-    cross = (
-        incoming_unit[:, 0] * outgoing_unit[:, 1]
-        - incoming_unit[:, 1] * outgoing_unit[:, 0]
-    )[:, None]
+    cross = (incoming_unit[:, 0] * outgoing_unit[:, 1] - incoming_unit[:, 1] * outgoing_unit[:, 0])[
+        :, None
+    ]
     sine = cross
     convexity = np.sign(cross)
     return np.concatenate(

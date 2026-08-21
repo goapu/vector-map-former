@@ -1,4 +1,4 @@
-"""Qualitative prediction figures for technical reports and interviews."""
+"""Qualitative prediction figures for technical reports and error analysis."""
 
 from __future__ import annotations
 
