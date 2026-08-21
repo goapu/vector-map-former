@@ -379,6 +379,9 @@ def evaluate_model(
         predictions_path.parent.mkdir(parents=True, exist_ok=True)
         np.savez_compressed(
             predictions_path,
-            **{name: np.concatenate(values, axis=0) for name, values in prediction_records.items()},
+            building_ids=np.concatenate(prediction_records["building_ids"], axis=0),
+            lengths=np.concatenate(prediction_records["lengths"], axis=0),
+            actions=np.concatenate(prediction_records["actions"], axis=0),
+            movements=np.concatenate(prediction_records["movements"], axis=0),
         )
     return result
