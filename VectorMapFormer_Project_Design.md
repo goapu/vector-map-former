@@ -59,7 +59,7 @@ This prototype implements a narrow but technically representative subset:
 | Shape simplification | Parallel per-vertex baseline and sequential edit-operation generation |
 | Spatial-semantic context | Neighbour-building tokens, nearest-road token, semantic-type embeddings, and target generalization-strength token |
 | Adaptive hierarchical pooling | Learned circular pairwise pooling creates segment-level and building-level representations |
-| Generative modelling | Autoregressive decoder emits `KEEP`, `REMOVE`, `MOVE_PREV`, `MOVE_NEXT`, and `EOS` operations |
+| Generative modelling | Autoregressive decoder emits `KEEP`, `REMOVE`, `MOVE`, and `EOS`; moved vertices also receive two incident-edge displacement values |
 | Training and benchmarking | Rule-based, MLP, circular CNN, and Transformer comparisons |
 | Geometric constraints | Validity-aware polygon reconstruction and explicit topology metrics |
 
@@ -145,8 +145,8 @@ Use the public MapGeneralizer arrays locally:
 - Column 1: vertex order
 - Columns 4–5: normalized coordinates
 - Columns 6–9: turning angle, convexity, and adjacent edge lengths
-- Column 10: removal label
-- Columns 11–12: movement labels
+- Column 10: action label (`0 = REMOVE`, `1 = KEEP`, `2 = MOVE`)
+- Columns 11–12: signed movement components along the preceding and succeeding incident edges
 
 The repository does not visibly provide a clear licence file. Cite the authors and repository, do not redistribute its arrays in this project, and describe how an authorized user can place them locally.
 
@@ -439,10 +439,10 @@ Do not use destructive augmentations that create self-intersections without expl
 
 ### 10.1 Strong parallel baseline
 
-For each input vertex, predict:
+For each input vertex, predict the dataset-compatible action:
 
 ```text
-KEEP or REMOVE
+REMOVE, KEEP, or MOVE
 ```
 
 Use class-weighted cross-entropy or focal loss because most vertices may be retained.
@@ -451,20 +451,20 @@ This head predicts all vertex decisions simultaneously. It is the stable baselin
 
 ### 10.2 Movement task
 
-If authorized MapGeneralizer movement labels can be used, add a second head predicting vertex displacement:
+For vertices labelled `MOVE`, add a second head predicting the two edge-relative displacement components:
 
 ```text
 delta_x, delta_y
 ```
 
-The MapGeneralizer formulation predicts whether a retained vertex is kept or moved along one of its incident edges. Preserve that structure rather than converting every movement into unconstrained Cartesian regression:
+The public MapGeneralizer arrays encode movement as two signed projections along the preceding and succeeding incident edges. Preserve that representation rather than silently converting it into an incompatible class scheme:
 
 ```text
-action class: KEEP, REMOVE, MOVE_PREV, MOVE_NEXT
-movement magnitude: one scalar along the selected incident edge
+action class: REMOVE, KEEP, MOVE
+movement regression: preceding-edge component, succeeding-edge component
 ```
 
-Apply the regression loss only to vertices with valid movement targets. If label semantics cannot be verified, omit movement rather than guessing.
+Apply the regression loss only to `MOVE` vertices. A later experiment may factor `MOVE` into preceding/succeeding direction classes, as in the Kada-group adaptation, but that requires an explicit relabelling rule and must not be confused with the original public array semantics.
 
 ### 10.3 Combined loss
 
@@ -521,7 +521,7 @@ This supports a modest context experiment without attempting full multi-object a
 The full Cart2Former direction emphasizes sequential generation. Free coordinate generation is too fragile for a short interview prototype, so use an autoregressive **edit sequence** aligned with the input ring:
 
 ```text
-<BOS>, KEEP, REMOVE, MOVE_PREV(delta), MOVE_NEXT(delta), ..., <EOS>
+<BOS>, KEEP, REMOVE, MOVE(delta_previous, delta_next), ..., <EOS>
 ```
 
 The encoder processes the detailed polygon and context. The causal decoder predicts the action at vertex `i` conditioned on the detailed geometry, target strength, context, and previous edit decisions. Use teacher forcing during training and greedy decoding for the first evaluation.
@@ -753,7 +753,7 @@ Prepare the outputs that mirror the vacancy's publication, presentation, and rep
 ### Session 5: context/generation signature experiment — 3–5 hours
 
 - Build neighbour/road tokens and one context-denoising smoke test.
-- If stable, implement a binary autoregressive `KEEP`/`REMOVE` decoder.
+- If stable, implement an autoregressive `REMOVE`/`KEEP`/`MOVE` decoder, initially ignoring movement regression if necessary.
 - Keep movement classes and full context ablations as the documented next milestone if labels or time block them.
 
 ### Session 6: scientific communication — 3 hours
