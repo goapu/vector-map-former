@@ -1,0 +1,60 @@
+[build-system]
+requires = ["setuptools>=69", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vector-map-former"
+version = "0.1.0"
+description = "Coordinate-native deep-learning baselines for vector building generalization"
+readme = "README.md"
+requires-python = ">=3.10,<3.14"
+license = { text = "MIT" }
+authors = [{ name = "Dilip Goswami" }]
+dependencies = [
+  "numpy>=1.26,<3",
+  "PyYAML>=6,<7",
+  "torch>=2.2,<3",
+]
+
+[project.optional-dependencies]
+geometry = [
+  "matplotlib>=3.8,<4",
+  "shapely>=2,<3",
+]
+geo = [
+  "geopandas>=1,<2",
+  "pyogrio>=0.9,<1",
+]
+dev = [
+  "mypy>=1.10,<2",
+  "pytest>=8,<9",
+  "pytest-cov>=5,<7",
+  "ruff>=0.6,<1",
+]
+
+[project.scripts]
+vmf = "vector_map_former.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+addopts = "-ra --strict-config --strict-markers"
+testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+strict = true
+warn_unreachable = true
+packages = ["vector_map_former"]
+
+[[tool.mypy.overrides]]
+module = ["yaml", "shapely", "shapely.*"]
+ignore_missing_imports = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "RUF"]

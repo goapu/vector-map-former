@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+title: VectorMapFormer
+message: "If you use this software, please cite it and the original MapGeneralizer study."
+type: software
+authors:
+  - family-names: Goswami
+    given-names: Dilip
+version: 0.1.0
+date-released: 2026-08-21
+license: MIT
